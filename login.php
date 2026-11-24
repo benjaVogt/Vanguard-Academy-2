@@ -1,0 +1,102 @@
+<?php
+session_start();
+require 'db.php';
+
+$error = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $nombre = trim($_POST['nombre'] ?? '');
+    $password = $_POST['password'] ?? '';
+
+    $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE nombre = ? OR email = ? LIMIT 1");
+    $stmt->execute([$nombre, $nombre]);
+    $user = $stmt->fetch();
+
+    if ($user && password_verify($password, $user['password_hash'])) {
+        $_SESSION['usuario_id'] = $user['id'];
+        $_SESSION['usuario_nombre'] = $user['nombre'];
+        header("Location: index.php");
+        exit();
+    } else {
+        $error = "Usuario o contraseña incorrectos.";
+    }
+}
+?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vanguard - Iniciar Sesión</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <header class="gov-header">
+        <div class="gov-container">
+            <a href="#" class="gov-header-brand">
+                <div>
+                    <h1 class="gov-header-title gov-brand-title">Vanguard</h1>
+                    <div class="gov-header-subtitle">Portal Oficial Educativo "Vanguard"</div>
+                </div>
+            </a>
+        </div>
+    </header>
+
+    <nav class="gov-nav">
+        <div class="gov-container">
+            <ul class="gov-nav-list">
+                <li class="gov-nav-item"><a href="#">Inicio</a></li>
+                <li class="gov-nav-item"><a href="#">Servicios</a></li>
+                <li class="gov-nav-item"><a href="#">Trámites</a></li>
+                <li class="gov-nav-item"><a href="#">Contacto</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="gov-container gov-main-spacing">
+        <div class="gov-card">
+            <h1>Iniciar sesión</h1>
+            <p>Ingrese sus credenciales de acceso para entrar al portal educativo.</p>
+
+            <?php if ($error): ?>
+                <div class="gov-alert gov-alert-info" style="margin-bottom: 1rem;">
+                    <?= htmlspecialchars($error) ?>
+                </div>
+            <?php endif; ?>
+
+            <form action="login.php" method="POST" novalidate>
+                <div class="gov-form-group">
+                    <label for="nombre" class="gov-label">Nombre de usuario</label>
+                    <div class="gov-hint">Utilice su nombre de usuario registrado.</div>
+                    <input type="text" id="nombre" name="nombre" class="gov-input" required>
+                </div>
+
+                <div class="gov-form-group">
+                    <label for="password" class="gov-label">Contraseña</label>
+                    <input type="password" id="password" name="password" class="gov-input" required autocomplete="current-password">
+                </div>
+
+                <button type="submit" class="gov-btn gov-btn-primary">Iniciar sesión</button>
+            </form>
+
+            <p class="gov-register-prompt">
+                ¿No tiene una cuenta? <a href="register.php">Regístrese aquí</a>
+            </p>
+        </div>
+    </main>
+
+    <footer class="gov-footer">
+        <div class="gov-container">
+            <ul class="gov-footer-links">
+                <li><a href="#">Política de Privacidad</a></li>
+                <li><a href="#">Términos y Condiciones</a></li>
+                <li><a href="#">Accesibilidad</a></li>
+                <li><a href="#">Contacto institucional</a></li>
+            </ul>
+            <p>&copy; 2026 Vanguard. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+</body>
+</html>
